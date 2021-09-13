@@ -13,7 +13,7 @@ def logoff():
     clear()
 
     print("Logoff Timer")
-    print("Please input how many hours until shutdown:")
+    print("Please input how many hours until logoff:")
     if invalid == True:
         print("ERROR: INVALID INPUT DETECTED")
     str_hours = input()
@@ -24,7 +24,7 @@ def logoff():
     else:
         invalid = True
         clear()
-        shutdown()
+        logoff()
 
     logoff_init()
 
