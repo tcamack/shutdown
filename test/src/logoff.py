@@ -32,7 +32,7 @@ def logoff_init():
 
     time = hours * 3600 #TIME NEEDS TO BE IN SECONDS
 
-    os.system("shutdown /s /t " + str(time))
+    os.system("shutdown /l /t " + str(time))
 
     clear()
     finalOptions()
