@@ -1,68 +1,74 @@
 import os
+from functools import partial
 from tkinter import *
 from tkinter import ttk
 
-def abort():
-    try:
-        os.system('shutdown /a')
-    except ValueError:
-        pass
+def abort(c):
+    os.system('shutdown /a')
+    c.set('Status: Timer aborted.')
 
-def timer(a, b):
+def timer(a, b, c):
     try:
-        time = round(int(3600 * float(a.get())))
-        os.system('shutdown ' + str(b.get()) + ' /t ' + str(time))
-        #print('Timer command complete.') #debug
+        time = int(round(3600 * float(a.get()))) # Verifies input is number
+        if time > -1: # Verifies input is positive
+            os.system('shutdown /a') # Program always attempts to abort previous timer in case one is already set.
+            os.system('shutdown ' + str(b.get()) + ' /t ' + str(time))
+            c.set('Status: Timer started for ' + a.get() + ' hour(s).')
+        else:
+            c.set('Status: VALUE ERROR - Enter a number greater than 0.')
     except ValueError:
-        #print('Timer command error.') #debug
-        #print(a.get()) #debug
-        #print(b.get()) #debug
+        c.set('Status: VALUE ERROR - Enter a number greater than 0.')
         pass
 
 def main():
     root = Tk()
     time_str = StringVar()
-    usr_selection = StringVar()
-    rdo_select = [('Logoff', '/l'), ('Restart', '/r'), ('Shutdown', '/s')]
+    usr_sel = StringVar()
+    status = StringVar()
+    rdo_select = [('Logoff', '/l'), ('Restart', '/r'), ('Shut down', '/s')]
 
-    #TODO: Add icon
-    root.title('Shutdown Timer')
-    mainframe = ttk.Frame(root, padding = '5 5 5 5')
-    mainframe.grid(column = 0, row = 0, sticky = (N, W, E, S))
+    # Default status' for 2/3 variables. No default status for time_str so entry box is empty.
+    usr_sel.set('/s')
+    status.set('Status: Ready')
+
+    root.title('Shut Down Timer')
+    root.geometry('+%d+%d' % ((root.winfo_screenwidth() / 2) - (root.winfo_reqwidth() / 1.25), (root.winfo_screenheight() / 2) - (root.winfo_reqheight() / 2))) # Open near the center of the screen.
+    mainFrame = ttk.Frame(root)
+    mainFrame.grid(column = 0, row = 0, sticky = (N, W, E, S))
 
     root.columnconfigure(0, weight = 1)
     root.rowconfigure(0, weight = 1)
 
-    #TODO: Fix spacing between Radiobuttons.
+    # For loop to add radio buttons on left side
     for option, val in rdo_select:
-        ttk.Radiobutton(mainframe, text = option, variable = usr_selection, value = val).grid(column = 0, sticky = (W))
+        ttk.Radiobutton(mainFrame, text = option, variable = usr_sel, value = val).grid(column = 0, ipady = 2, sticky = (N, W, S)) # Using inside padding to fix spacing issues caused by 'Abort' button.
 
-    '''
-    logoff = ttk.Radiobutton(mainframe, text = 'Logoff', variable = usr_selection, value = '/l')
-    logoff.grid(column = 0, row = 0, sticky = (W))
-    restart = ttk.Radiobutton(mainframe, text = 'Restart', variable = usr_selection, value = '/r')
-    restart.grid(column = 0, row = 1, sticky = (W))
-    shutdown = ttk.Radiobutton(mainframe, text = 'Shutdown', variable = usr_selection, value = '/s')
-    shutdown.grid(column = 0, row = 2, sticky = (W))
-    '''
+    ttk.Label(mainFrame, text = 'Time in Hours', anchor = 'center').grid(column = 2, row = 0, sticky = (W, E))
 
-    usr_selection.set('/s')
+    # Create & add an entry widget, takes in string to assign to variable time_str.
+    time_entry = ttk.Entry(mainFrame, width = 7, textvariable = time_str)
+    time_entry.grid(column = 2, row = 1, sticky = (N, W, E, S))
 
-    ttk.Label(mainframe, text = 'Time in Hours', anchor = 'center').grid(column = 1, row = 0, sticky = (W, E))
+    # Using partials to delay command calls.
+    # Adding buttons for starting or aborting shut down timer.
+    ttk.Button(mainFrame, text = 'Abort', width = 15, command = partial(abort, status)).grid(column = 2, row = 2, sticky = (W, E))
+    ttk.Button(mainFrame, text = 'Start', width = 15, command = partial(timer, time_str, usr_sel, status)).grid(column = 3, row = 0, rowspan = 3, sticky = (N, W, E, S))
 
-    #TODO: Check to make sure user input is number.
-    time_entry = ttk.Entry(mainframe, width = 7, textvariable = time_str)
-    time_entry.grid(column = 1, row = 1, sticky = (W, E))
+    # Status bar, changes based on user input. Row determined by length of radio button list.
+    ttk.Label(mainFrame, textvariable = status).grid(column = 0, row = len(rdo_select) + 1, columnspan = 4, sticky = (W))
 
-    ttk.Button(mainframe, text = 'Abort', width = 15, command = abort).grid(column = 1, row = 2, sticky = (W, E))
-    ttk.Button(mainframe, text = 'Start', width = 15, command = lambda: timer(time_str, usr_selection)).grid(column = 2, row = 0, rowspan = 3, sticky = (N, W, E, S))
+    # For loop to add padding to every UI widget.
+    for child in mainFrame.winfo_children():
+        child.grid_configure(padx = 5, pady = 4)
 
-    for child in mainframe.winfo_children():
-        child.grid_configure(padx = 5, pady = 5)
+    # Separators for organization, length determined by length of radio button list.
+    ttk.Separator(mainFrame, orient = 'vertical').grid(column = 1, row = 0, rowspan = len(rdo_select), sticky = (N, S))
+    ttk.Separator(mainFrame, orient = 'horizontal').grid(column = 0, row = len(rdo_select), columnspan = 4, sticky = (W, E))
 
-    time_entry.focus()
-    root.bind('<Return>', lambda event:timer(time_str, usr_selection))
+    time_entry.focus() # Default focus on entry widget
+    root.bind('<Return>', lambda event:timer(time_str, usr_sel, status)) # Using lambda to delay command call
 
+    root.resizable(False, False) # Prevent window from being resized.
     root.mainloop()
 
 if __name__ == '__main__':
