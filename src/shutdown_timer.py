@@ -1,5 +1,4 @@
 import os
-from functools import partial
 from tkinter import *
 from tkinter import ttk
 
@@ -13,9 +12,11 @@ def timer(a, b):
     try:
         time = round(int(3600 * float(a.get())))
         os.system('shutdown ' + str(b.get()) + ' /t ' + str(time))
-        #print('Shutdown command complete.') #debug
+        #print('Timer command complete.') #debug
     except ValueError:
-        #print('Shutdown command error.') #debug
+        #print('Timer command error.') #debug
+        #print(a.get()) #debug
+        #print(b.get()) #debug
         pass
 
 def main():
@@ -49,18 +50,18 @@ def main():
 
     ttk.Label(mainframe, text = 'Time in Hours', anchor = 'center').grid(column = 1, row = 0, sticky = (W, E))
 
-    #TODO: Check to make sure user input is a number.
+    #TODO: Check to make sure user input is number.
     time_entry = ttk.Entry(mainframe, width = 7, textvariable = time_str)
     time_entry.grid(column = 1, row = 1, sticky = (W, E))
 
     ttk.Button(mainframe, text = 'Abort', width = 15, command = abort).grid(column = 1, row = 2, sticky = (W, E))
-    ttk.Button(mainframe, text = 'Start', width = 15, command = partial(timer, time_str, usr_selection)).grid(column = 2, row = 0, rowspan = 3, sticky = (N, W, E, S))
+    ttk.Button(mainframe, text = 'Start', width = 15, command = lambda: timer(time_str, usr_selection)).grid(column = 2, row = 0, rowspan = 3, sticky = (N, W, E, S))
 
     for child in mainframe.winfo_children():
         child.grid_configure(padx = 5, pady = 5)
 
     time_entry.focus()
-    root.bind('<Return>', timer)
+    root.bind('<Return>', lambda event:timer(time_str, usr_selection))
 
     root.mainloop()
 
